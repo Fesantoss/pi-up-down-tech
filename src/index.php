@@ -6,7 +6,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <section class="hero">
     <h1>
-        Seu carro em boas mãos,<br>
+        <br>Seu carro em boas mãos,</br>
         <span style="color: #16baff;">
             do diagnóstico à solução.
         </span>
