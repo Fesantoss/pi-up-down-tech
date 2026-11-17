@@ -1,9 +1,12 @@
+
 FROM php:8.2-apache
 
-# Instala extensões necessárias para o MySQL
-RUN docker-php-ext-install pdo pdo_mysql mysqli
+RUN a2enmod rewrite
 
-# Habilita o mod_rewrite do Apache para URLs amigáveis
-a2enmod rewrite
+RUN docker-php-ext-install mysqli pdo pdo_mysql
+
+WORKDIR /var/www/html
+
+COPY ./src/ /var/www/html/
 
 EXPOSE 80
