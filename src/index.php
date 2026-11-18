@@ -1,71 +1,87 @@
-
 <?php
-$titulo = 'Início';
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/assets/api/conexao.php';
+
+$categoriaFiltro = $_GET['categoria'] ?? '';
+if ($categoriaFiltro) {
+    $stmt = $pdo->prepare("SELECT * FROM pecas WHERE categoria = ? ORDER BY id DESC");
+    $stmt->execute([$categoriaFiltro]);
+} else {
+    $stmt = $pdo->query("SELECT * FROM pecas ORDER BY id DESC");
+}
+$pecas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TurboPeças | Oficina & Autopeças</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <h1>⚙️ Turbo<span>Peças</span></h1>
+            <nav>
+                <a href="index.php">Loja</a>
+                <a href="admin.php">+ Cadastrar Peça</a>
+                <button id="btn-carrinho" onclick="toggleCarrinho()">
+                    🛒 Carrinho (<span id="cart-count">0</span>)
+                </button>
+            </nav>
+        </div>
+    </header>
 
-<section class="hero">
-    <h1>
-        <br>Seu carro em boas mãos,</br>
-        <span style="color: #16baff;">
-            do diagnóstico à solução.
-        </span>
-    </h1>
+    <main class="container">
+        <?php if (isset($_GET['sucesso'])): ?>
+            <div class="alerta-sucesso">Peça cadastrada no catálogo com sucesso!</div>
+        <?php endif; ?>
 
-    <p>
-        A Up Down Tech conecta avaliação, peças automotivas
-        e serviços em um atendimento transparente.
-        Consulte nosso catálogo ou fale com nossa equipe.
-    </p>
+        <section class="filtros">
+            <h2>Catálogo de Peças</h2>
+            <div class="categorias-btns">
+                <a href="index.php" class="<?= $categoriaFiltro == '' ? 'ativo' : '' ?>">Todas</a>
+                <a href="index.php?categoria=Motor" class="<?= $categoriaFiltro == 'Motor' ? 'ativo' : '' ?>">Motor</a>
+                <a href="index.php?categoria=Freios" class="<?= $categoriaFiltro == 'Freios' ? 'ativo' : '' ?>">Freios</a>
+                <a href="index.php?categoria=Suspensão" class="<?= $categoriaFiltro == 'Suspensão' ? 'ativo' : '' ?>">Suspensão</a>
+                <a href="index.php?categoria=Ignição" class="<?= $categoriaFiltro == 'Ignição' ? 'ativo' : '' ?>">Ignição</a>
+            </div>
+        </section>
 
-    <div class="actions">
-        <a href="catalogo.php" class="btn">
-            Consultar catálogo de peças
-        </a>
+        <section class="grid-pecas">
+            <?php foreach ($pecas as $peca): ?>
+                <div class="card">
+                    <span class="badge"><?= htmlspecialchars($peca['categoria']) ?></span>
+                    <img src="<?= htmlspecialchars($peca['imagem_url']) ?>" alt="<?= htmlspecialchars($peca['nome']) ?>">
+                    <div class="card-body">
+                        <small class="sku">Cód: <?= htmlspecialchars($peca['codigo_sku']) ?></small>
+                        <h3><?= htmlspecialchars($peca['nome']) ?></h3>
+                        <p class="estoque">Estoque: <?= $peca['estoque'] ?> un.</p>
+                        <div class="card-footer">
+                            <span class="preco">R$ <?= number_format($peca['preco'], 2, ',', '.') ?></span>
+                            <button onclick="adicionarAoCarrinho(<?= $peca['id'] ?>, '<?= addslashes($peca['nome']) ?>', <?= $peca['preco'] ?>)">
+                                Adicionar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </section>
+    </main>
 
-        <a href="login.php" class="btn secondary">
-            Acesso da equipe
-        </a>
-    </div>
-</section>
+    <!-- Modal Lateral do Carrinho -->
+    <aside id="modal-carrinho" class="carrinho-sidebar">
+        <div class="carrinho-header">
+            <h3>Seu Pedido</h3>
+            <button onclick="toggleCarrinho()">✖</button>
+        </div>
+        <div id="itens-carrinho" class="carrinho-itens"></div>
+        <div class="carrinho-footer">
+            <div class="total">Total: <span id="cart-total">R$ 0,00</span></div>
+            <button class="btn-finalizar" onclick="finalizarPedido()">Finalizar Compra</button>
+        </div>
+    </aside>
 
-<section class="grid">
-
-    <div class="card">
-        <div class="product-icon">🛡️</div>
-
-        <h3>Qualidade e garantia</h3>
-
-        <p class="muted">
-            Opções de peças com informações claras
-            sobre garantia e aplicação.
-        </p>
-    </div>
-
-    <div class="card">
-        <div class="product-icon">🔧</div>
-
-        <h3>Atendimento especializado</h3>
-
-        <p class="muted">
-            Nossa equipe avalia o veículo e recomenda
-            as peças adequadas para cada situação.
-        </p>
-    </div>
-
-    <div class="card">
-        <div class="product-icon">📋</div>
-
-        <h3>Orçamento transparente</h3>
-
-        <p class="muted">
-            Peças e mão de obra apresentados ao cliente
-            antes da aprovação do serviço.
-        </p>
-    </div>
-
-</section>
-
-<?php
-require_once __DIR__ . '/includes/footer.php';
-?>
+    <script src="script.js"></script>
+</body>
+</html>

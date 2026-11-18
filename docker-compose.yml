@@ -1,44 +1,35 @@
 
 services:
   web:
-    build: .
-    container_name: updown_web
+    image: php:8.2-apache
+    container_name: oficina_web
     ports:
       - "8080:80"
     volumes:
       - ./src:/var/www/html
     depends_on:
       - db
-    restart: unless-stopped
-    environment:
-      DB_HOST: db
-      DB_NAME: updown_tech
-      DB_USER: root
-      DB_PASS: secret
+    command: >
+      bash -c "echo 'ServerName localhost' >> /etc/apache2/apache2.conf &&
+      docker-php-ext-install pdo pdo_mysql &&
+      apache2-foreground"
 
   db:
     image: mysql:8.0
-    container_name: updown_db
-    restart: unless-stopped
+    container_name: oficina_db
     environment:
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: updown_tech
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: up-down-tech
     ports:
       - "3307:3306"
-    volumes:
-      - db_data:/var/lib/mysql
-      - ./database:/docker-entrypoint-initdb.d
 
   phpmyadmin:
-    image: phpmyadmin:latest
-    container_name: updown_phpmyadmin
-    restart: unless-stopped
+    image: phpmyadmin/phpmyadmin
+    container_name: oficina_pma
     ports:
       - "8081:80"
     environment:
       PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
     depends_on:
       - db
-
-volumes:
-  db_data:
